@@ -11,8 +11,6 @@
 #include "fatfs.h"
 #include "spi_sd.h"
 #include "fatfs_sd.h"
-#include "String.h"
-#include "stdio.h"
 
 /* Variables declaration -----------------------------------------------------*/
 
@@ -29,14 +27,12 @@ void sd_writeCSV(float value) {
 /* Mount SD Card -------------------------------------------------------------*/
 		    fresult = f_mount(&fs, "", 1);
 		    if (fresult != FR_OK) {
-		        send_uart("Erro ao montar o cartão SD.\n");
 		        return;
 		    }
 
 /* Open/Create file ----------------------------------------------------------*/
 		    fresult = f_open(&fil, "DadosFSAE.csv", FA_OPEN_ALWAYS | FA_WRITE);
 		    if (fresult != FR_OK) {
-		        send_uart("Erro ao abrir o arquivo.\n");
 		        return;
 		    }
 
@@ -47,10 +43,8 @@ void sd_writeCSV(float value) {
 
 /* Write data to file --------------------------------------------------------*/
 	    fresult = f_write(&fil, buffer, strlen(buffer), &bw);
-	    if (fresult == FR_OK) {
-	        send_uart("Valor salvo no SD em CSV!\n");
-	    } else {
-	        send_uart("Erro ao escrever no CSV!\n");
+	    if (fresult != FR_OK) {
+	        return;
 	    }
 
 /* Close file ----------------------------------------------------------------*/
@@ -62,14 +56,12 @@ void sd_writeBin(float value){
 /* Mount SD Card -------------------------------------------------------------*/
 	    fresult = f_mount(&fs, "", 1);
 	    if (fresult != FR_OK) {
-	        send_uart("Erro ao montar o cartão SD.\n");
 	        return;
 	    }
 
 /* Open/Create file ----------------------------------------------------------*/
 	    fresult = f_open(&fil, "DadosFSAE.bin", FA_OPEN_ALWAYS | FA_WRITE);
 	    if (fresult != FR_OK) {
-	        send_uart("Erro ao abrir o arquivo.\n");
 	        return;
 	    }
 
@@ -79,11 +71,8 @@ void sd_writeBin(float value){
 /* Write data to file --------------------------------------------------------*/
 		fresult = f_write(&fil, &value, sizeof(float), &bw);
 		if (fresult == FR_OK) {
-			send_uart("Valor salvo no SD em binário!\n");
-		} else {
-			send_uart("Erro ao escrever no SD!\n");
+			return;
 		}
-
 /* Close file ----------------------------------------------------------------*/
 	    f_close(&fil);
 	    bufclear();

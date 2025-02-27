@@ -9,29 +9,29 @@
 
 /* Mode Select -----------------------------------------------------------*/
 
-#define WriteMode
-//#define ReadMode
+#define WRITEMODE
+//#define READMODE
 
 /* SD Card save modes -----------------------------------------------------------*/
-#define CSV_mode
-//#define Binary_mode
+#define CSV_MODE
+//#define BINARY_MODE
 
 /* Control types  -----------------------------------------------------------*/
-#ifdef WriteMode
-#ifdef CSV_mode
-#define CSV_write
+#ifdef WRITEMODE
+#ifdef CSV_MODE
+#define CSV_WRITE
 #endif
-#ifdef Binary_mode
-#define Binary_write
+#ifdef BINARY_MODE
+#define BINARY_WRITE
 #endif
 #endif
 
-#ifdef ReadMode
-#ifdef CSV_mode
-#define CSV_read
+#ifdef READMODE
+#ifdef CSV_MODE
+#define CSV_READ
 #endif
-#ifdef Binary_mode
-#define Binary_read
+#ifdef BINARY_MODE
+#define BINARY_READ
 #endif
 #endif
 

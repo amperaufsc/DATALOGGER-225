@@ -14,6 +14,8 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
+#include "main.h"
+#include "fatfs.h"
 #include "fatfs_sd.h"
 #include "String.h"
 #include "stdio.h"
