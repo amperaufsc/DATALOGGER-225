@@ -60,8 +60,8 @@ all: main-build
 main-build: ADC-MultiChannel.elf secondary-outputs
 
 # Tool invocations
-ADC-MultiChannel.elf ADC-MultiChannel.map: $(OBJS) $(USER_OBJS) C:\Users\Mari\STM32CubeIDE\workspace_1.16.1\ADC-MultiChannel\STM32F103RBTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "ADC-MultiChannel.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\Mari\STM32CubeIDE\workspace_1.16.1\ADC-MultiChannel\STM32F103RBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="ADC-MultiChannel.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+ADC-MultiChannel.elf ADC-MultiChannel.map: $(OBJS) $(USER_OBJS) C:\Users\Mari\STM32CubeIDE\workspace_1.16.1\DATALOGGER-225\ADC-MultiChannel\STM32F103RBTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "ADC-MultiChannel.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\Mari\STM32CubeIDE\workspace_1.16.1\DATALOGGER-225\ADC-MultiChannel\STM32F103RBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="ADC-MultiChannel.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

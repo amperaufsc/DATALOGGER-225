@@ -55,6 +55,12 @@ float ADC_Voltage[READSIZE];
 float ADC_Position[READSIZE];
 int IsADCFinished = 0;
 int count = 0;
+typedef enum{
+	NOT_READY_TO_DRIVE,
+	READY_TO_DRIVE
+}States;
+States state_machine = NOT_READY_TO_DRIVE;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -118,6 +124,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
+	  if(state_machine == READY_TO_DRIVE){
 	  if(IsADCFinished == 1){
 		  for(int i = 0; i < READSIZE; i++){
 			  ADC_Voltage[i] = ReadVoltage(ADC_VAL[i]); // Recebe as tensões convertidas
@@ -138,7 +146,7 @@ int main(void)
 	  sd_writeBin(ADC_Position[i]);
 	  }
 #endif
-  }
+  }}
   /* USER CODE END 3 */
 }
 
