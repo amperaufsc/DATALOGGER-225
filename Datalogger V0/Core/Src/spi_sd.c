@@ -18,11 +18,17 @@ FATFS fs;// File System
 FIL fil; // File
 FRESULT fresult; // Store the result
 UINT br,bw; //File read/write count
-#define Buffersize 50
-char buffer[Buffersize];
-
+char buffer[BUFFERSIZE];
+int buffercount = 0;
+int TAM = BUFFERSIZE;
+float Buffer1[BUFFERSIZE] = {0};
 /* Exported functions --------------------------------------------------------*/
+void save_to_buffer(float position){
 
+	for(buffercount = 0;buffercount <= BUFFERSIZE - 1; buffercount++){
+	Buffer1[buffercount] = position;
+	}
+		}
 void sd_writeCSV(float value) {
 /* Mount SD Card -------------------------------------------------------------*/
 		    fresult = f_mount(&fs, "", 1);
@@ -80,7 +86,7 @@ void sd_writeBin(float value){
 
 void bufclear (void){
 /* Clean Buffer --------------------------------------------------------------*/
-	for(int i = 0; i < Buffersize; i++){
+	for(int i = 0; i < TAM; i++){
 		buffer[i] = '\0';
 	}
 }

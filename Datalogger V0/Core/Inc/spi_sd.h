@@ -19,9 +19,11 @@ extern "C" {
 #include "fatfs_sd.h"
 #include "String.h"
 #include "stdio.h"
+/* Defines ------------------------------------------------------------------*/
+#define BUFFERSIZE 100
 
 /* Exported functions --	------------------------------------------------------*/
-void send_uart(char *string);
+void save_to_buffer(float position);
 void sd_writeBin(float value);
 void sd_writeCSV(float value);
 void bufclear (void);

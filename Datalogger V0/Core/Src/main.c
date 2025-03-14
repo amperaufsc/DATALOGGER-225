@@ -138,6 +138,7 @@ int main(void)
 			  for(int i = 0; i < READSIZE; i++){
 				  ADC_Voltage[i] = ReadVoltage(ADC_VAL[i]); // Recebe as tensões convertidas
 				  ADC_Position[i] = ReadPosition(ADC_Voltage[i]); // Recebe a Tensão e converte em Posição do potenciometro linear
+				  save_to_buffer(ADC_Position[i]);
 			  }
 			  IsADCFinished = 0;
 		  }
