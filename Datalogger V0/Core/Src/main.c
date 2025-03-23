@@ -46,6 +46,8 @@
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
 
+CAN_HandleTypeDef hcan;
+
 SPI_HandleTypeDef hspi1;
 
 TIM_HandleTypeDef htim4;
@@ -57,13 +59,19 @@ uint16_t ADC_VAL[READSIZE];
 float ADC_Voltage[READSIZE];
 float ADC_Position[READSIZE];
 int IsADCFinished = 0;
-int CountTIM = 0;
-int SaveData = 0;
+int SendData = 0;
 typedef enum{
 	NOT_READY_TO_DRIVE,
 	READY_TO_DRIVE
 }States;
 States state_machine = READY_TO_DRIVE;
+
+CAN_TxHeaderTypeDef TxHeader;
+CAN_RxHeaderTypeDef RxHeader;
+uint32_t TxMailbox;
+uint8_t TxData[8];
+uint8_t RxData[8];
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -74,6 +82,7 @@ static void MX_USART2_UART_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_TIM4_Init(void);
+static void MX_CAN_Init(void);
 /* USER CODE BEGIN PFP */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc);
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef * htim);
@@ -119,9 +128,16 @@ int main(void)
   MX_SPI1_Init();
   MX_FATFS_Init();
   MX_TIM4_Init();
+  MX_CAN_Init();
   /* USER CODE BEGIN 2 */
-  HAL_TIM_Base_Start_IT(&htim4);
+  HAL_CAN_Start(&hcan);
+  HAL_CAN_ActivateNotification(&hcan, CAN_IT_RX_FIFO0_MSG_PENDING);
+  TxHeader.DLC = 7; // Tamanho do dado
+  TxHeader.IDE = CAN_ID_STD;
+  TxHeader.RTR = CAN_RTR_DATA;
+  TxHeader.StdId = 	0X446; // Id da mensagem
 
+  HAL_TIM_Base_Start_IT(&htim4);
   HAL_ADC_Start_DMA(&hadc1, (uint32_t *) ADC_VAL, READSIZE);
   /* USER CODE END 2 */
 
@@ -133,30 +149,15 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 	  while(state_machine == READY_TO_DRIVE){
-		  if(SaveData == 1){
+		  if(SendData == 1){
 		  if(IsADCFinished == 1){
 			  for(int i = 0; i < READSIZE; i++){
 				  ADC_Voltage[i] = ReadVoltage(ADC_VAL[i]); // Recebe as tensões convertidas
 				  ADC_Position[i] = ReadPosition(ADC_Voltage[i]); // Recebe a Tensão e converte em Posição do potenciometro linear
-				  save_to_buffer(ADC_Position[i]);
 			  }
 			  IsADCFinished = 0;
-		  }
-
-//	#ifdef CSV_WRITE
-//		  for(int i =0; i < READSIZE; i++){
-//		  sd_writeCSV(ADC_Voltage[i]);
-//		  sd_writeCSV(ADC_Position[i]);
-//		  }
-//	#endif
-//	#ifdef BINARY_WRITE
-//		  for(int i =0; i < READSIZE; i++){
-//		  sd_writeBin(ADC_Voltage[i]);
-//		  sd_writeBin(ADC_Position[i]);
-//		  }
-//	#endif
-	  }
-		  SaveData = 0;
+		  }}
+		  SendData = 0;
   }}
   /* USER CODE END 3 */
 }
@@ -251,6 +252,43 @@ static void MX_ADC1_Init(void)
   /* USER CODE BEGIN ADC1_Init 2 */
 
   /* USER CODE END ADC1_Init 2 */
+
+}
+
+/**
+  * @brief CAN Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_CAN_Init(void)
+{
+
+  /* USER CODE BEGIN CAN_Init 0 */
+
+  /* USER CODE END CAN_Init 0 */
+
+  /* USER CODE BEGIN CAN_Init 1 */
+
+  /* USER CODE END CAN_Init 1 */
+  hcan.Instance = CAN1;
+  hcan.Init.Prescaler = 18;
+  hcan.Init.Mode = CAN_MODE_NORMAL;
+  hcan.Init.SyncJumpWidth = CAN_SJW_1TQ;
+  hcan.Init.TimeSeg1 = CAN_BS1_2TQ;
+  hcan.Init.TimeSeg2 = CAN_BS2_1TQ;
+  hcan.Init.TimeTriggeredMode = DISABLE;
+  hcan.Init.AutoBusOff = DISABLE;
+  hcan.Init.AutoWakeUp = DISABLE;
+  hcan.Init.AutoRetransmission = DISABLE;
+  hcan.Init.ReceiveFifoLocked = DISABLE;
+  hcan.Init.TransmitFifoPriority = DISABLE;
+  if (HAL_CAN_Init(&hcan) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN CAN_Init 2 */
+
+  /* USER CODE END CAN_Init 2 */
 
 }
 
@@ -394,8 +432,8 @@ static void MX_DMA_Init(void)
 static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-/* USER CODE BEGIN MX_GPIO_Init_1 */
-/* USER CODE END MX_GPIO_Init_1 */
+  /* USER CODE BEGIN MX_GPIO_Init_1 */
+  /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
@@ -423,15 +461,14 @@ static void MX_GPIO_Init(void)
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
-/* USER CODE BEGIN MX_GPIO_Init_2 */
-/* USER CODE END MX_GPIO_Init_2 */
+  /* USER CODE BEGIN MX_GPIO_Init_2 */
+  /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef * htim)
 {
-	SaveData = 1;
-	CountTIM++;
+	SendData = 1;
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc){
@@ -439,7 +476,12 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc){
 	IsADCFinished = 1;
 
 }
-
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan){
+	if(HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx1Header, rx1Data)==HAL_OK){
+		switch(rx1Header.StdId){
+		case 0x1:
+		case 0x2:
+		}
 /* USER CODE END 4 */
 
 /**

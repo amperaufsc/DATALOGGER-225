@@ -192,4 +192,5 @@
 			<resource resourceType="PROJECT" workspacePath="/Datalogger V0"/>
 		</configuration>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 </cproject>
