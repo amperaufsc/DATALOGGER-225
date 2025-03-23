@@ -32,6 +32,7 @@ void CleanADC_VAL(float* ADC_VAL ){
 }
 float ReadAngleSTR(float voltage){
     float interval = (VOL_ANGLE_MAX - VOL_ANGLE_MIN) / 3.3f;
-    float Angle = (voltage - V_CENTER) * interval; // Ajusta o centro do volante
-    return Angle;
+    float Angle = (voltage - V_CENTER) * interval;
+    float AngleSTR = Angle/(STR_RATIO); // Divide pelo Steering Ratio, a cada 4.35 graus a roda gira 1 grau
+    return AngleSTR;
 }
