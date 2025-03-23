@@ -1,3 +1,4 @@
 ../Core/Src/adc_multi.c:14:7:ReadPosition	24	static
 ../Core/Src/adc_multi.c:19:7:ReadVoltage	24	static
-../Core/Src/adc_multi.c:23:6:CleanADC_VAL	24	static
+../Core/Src/adc_multi.c:23:7:ReadAngle	24	static
+../Core/Src/adc_multi.c:28:6:CleanADC_VAL	24	static

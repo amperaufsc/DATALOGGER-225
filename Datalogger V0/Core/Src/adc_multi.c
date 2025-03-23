@@ -13,12 +13,17 @@
 /* Exported functions --------------------------------------------------------*/
 float ReadPosition(float voltage){
 	float position = (voltage / 3.3f)* 75.0f; // Converte Tensão em Milimetros
-	return roundf(position * 100) / 100; // Arredonda para 2 casas decimais
+	return position;
 }
 
 float ReadVoltage(uint16_t Analog_Val) {
     float voltage = (Analog_Val * 3.3f) / ((1 << 12) - 1.0f); // Converte um valor analogico para tensão
-    return roundf(voltage * 100) / 100;  // Arredonda para 2 casas decimais
+    return voltage;
+}
+float ReadAngle(int Pedal_position){
+	float interval = (ANGLE_MAX - ANGLE_MIN)/ 100.0;
+	float Angle = (interval*Pedal_position) + ANGLE_MIN;
+	return Angle;
 }
 void CleanADC_VAL(float* ADC_VAL ){
 	for (int i = 0; i < READSIZE; i++) {

@@ -19,11 +19,12 @@ extern "C" {
 
 /* Defines declaration -------------------------------------------------------*/
 #define READSIZE 1 // Amount of sensor to be read
-
+#define ANGLE_MIN 20 // Angle when pedal is pressed
+#define ANGLE_MAX 90 // Angle when pedal is inertial
 
 /* Exported functions --	------------------------------------------------------*/
 float ReadVoltage(uint16_t Analog_Val);
 void CleanADC_VAL(float* ADC_VAL );
 float ReadPosition(float voltage);
-
+float ConvertAngle(float Angle);
 #endif /* INC_ADC_MULTI_H_ */
