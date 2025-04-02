@@ -100,17 +100,27 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
     __HAL_RCC_ADC1_CLK_ENABLE();
 
     __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOB_CLK_ENABLE();
     /**ADC1 GPIO Configuration
+    PA0-WKUP     ------> ADC1_IN0
+    PA1     ------> ADC1_IN1
     PA2     ------> ADC1_IN2
     PA3     ------> ADC1_IN3
+    PA4     ------> ADC1_IN4
     PA5     ------> ADC1_IN5
     PA6     ------> ADC1_IN6
     PA7     ------> ADC1_IN7
+    PB0     ------> ADC1_IN8
+    PB1     ------> ADC1_IN9
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_5|GPIO_PIN_6
-                          |GPIO_PIN_7;
+    GPIO_InitStruct.Pin = EXTRA_2_Pin|BRK_PRESSURE_F_Pin|BRK_PRESSURE_T_Pin|EXTRA_3_Pin
+                          |SUSP_TD_Pin|SUSP_FE_Pin|SUSP_FD_Pin|SUSP_TE_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = STR_ANG_Pin|EXTRA_1_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
     /* ADC1 DMA Init */
     /* ADC1 Init */
@@ -120,7 +130,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
     hdma_adc1.Init.MemInc = DMA_MINC_ENABLE;
     hdma_adc1.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
     hdma_adc1.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
-    hdma_adc1.Init.Mode = DMA_NORMAL;
+    hdma_adc1.Init.Mode = DMA_CIRCULAR;
     hdma_adc1.Init.Priority = DMA_PRIORITY_LOW;
     if (HAL_DMA_Init(&hdma_adc1) != HAL_OK)
     {
@@ -154,14 +164,21 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
     __HAL_RCC_ADC1_CLK_DISABLE();
 
     /**ADC1 GPIO Configuration
+    PA0-WKUP     ------> ADC1_IN0
+    PA1     ------> ADC1_IN1
     PA2     ------> ADC1_IN2
     PA3     ------> ADC1_IN3
+    PA4     ------> ADC1_IN4
     PA5     ------> ADC1_IN5
     PA6     ------> ADC1_IN6
     PA7     ------> ADC1_IN7
+    PB0     ------> ADC1_IN8
+    PB1     ------> ADC1_IN9
     */
-    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_5|GPIO_PIN_6
-                          |GPIO_PIN_7);
+    HAL_GPIO_DeInit(GPIOA, EXTRA_2_Pin|BRK_PRESSURE_F_Pin|BRK_PRESSURE_T_Pin|EXTRA_3_Pin
+                          |SUSP_TD_Pin|SUSP_FE_Pin|SUSP_FD_Pin|SUSP_TE_Pin);
+
+    HAL_GPIO_DeInit(GPIOB, STR_ANG_Pin|EXTRA_1_Pin);
 
     /* ADC1 DMA DeInit */
     HAL_DMA_DeInit(hadc->DMA_Handle);

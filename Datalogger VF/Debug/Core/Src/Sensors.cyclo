@@ -3,3 +3,4 @@
 ../Core/Src/Sensors.c:23:7:ReadAngle	1
 ../Core/Src/Sensors.c:28:6:CleanADC_VAL	2
 ../Core/Src/Sensors.c:33:7:ReadAngleSTR	1
+../Core/Src/Sensors.c:38:7:ReadPressure	1

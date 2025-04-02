@@ -1,3 +1,0 @@
-../Core/Src/adc_multi.c:14:7:ReadPosition	1
-../Core/Src/adc_multi.c:19:7:ReadVoltage	1
-../Core/Src/adc_multi.c:23:6:CleanADC_VAL	2

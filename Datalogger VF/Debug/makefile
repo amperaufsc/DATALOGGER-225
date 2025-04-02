@@ -60,8 +60,8 @@ all: main-build
 main-build: Datalogger\ VF.elf secondary-outputs
 
 # Tool invocations
-Datalogger\ VF.elf Datalogger\ VF.map: $(OBJS) $(USER_OBJS) C:\Users\Matheus\STM32CubeIDE\workspace_1.16.1\DATALOGGER-225\Datalogger\ VF\STM32F103C8TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "Datalogger VF.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\Matheus\STM32CubeIDE\workspace_1.16.1\DATALOGGER-225\Datalogger VF\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Datalogger VF.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Datalogger\ VF.elf Datalogger\ VF.map: $(OBJS) $(USER_OBJS) C:\Users\Mari\STM32CubeIDE\workspace_1.16.1\DATALOGGER-225\Datalogger\ VF\STM32F103C8TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "Datalogger VF.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\Mari\STM32CubeIDE\workspace_1.16.1\DATALOGGER-225\Datalogger VF\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Datalogger VF.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

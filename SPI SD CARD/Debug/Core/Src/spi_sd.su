@@ -1,3 +1,0 @@
-../Core/Src/spi_sd.c:26:6:sd_writeCSV	16	static
-../Core/Src/spi_sd.c:55:6:sd_writeBin	16	static
-../Core/Src/spi_sd.c:81:6:bufclear	16	static

@@ -30,9 +30,12 @@ void CleanADC_VAL(float* ADC_VAL ){
 	    ADC_VAL[i] = 0;
 	}
 }
-float ReadAngleSTR(float voltage){
-    float interval = (VOL_ANGLE_MAX - VOL_ANGLE_MIN) / 3.3f;
-    float Angle = (voltage - V_CENTER) * interval;
-    float AngleSTR = Angle/(STR_RATIO); // Divide pelo Steering Ratio, a cada 4.35 graus a roda gira 1 grau
-    return AngleSTR;
+float ReadAngleSTR(float voltage) {
+
+    float str_angle = ((voltage - V_CENTER) / (V_MAX / 2)) * VOL_ANGLE_MAX;
+    return str_angle;
+}
+float ReadPressure(uint16_t Analog_Val){
+    float voltage = ReadVoltage(Analog_Val);
+    return ((voltage / 3.3f) * 102.0f) * 14.5038f;
 }

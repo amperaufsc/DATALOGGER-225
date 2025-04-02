@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "Sensors.h"
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,21 +50,19 @@ TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN PV */
 uint16_t ADC_VAL[READSIZE];
-float ADC_Voltage[READSIZE];
-float ADC_Position[READSIZE];
 int IsADCFinished = 0;
 int sendData = 0;
 uint8_t Pedal_position;
-float PEDAL_angle;
-float STR_angle;
-typedef enum{
-	NOT_READY_TO_DRIVE,
-	READY_TO_DRIVE
-}States;
-States state_machine = NOT_READY_TO_DRIVE;
-
-CAN_TxHeaderTypeDef TxHeader1;
-CAN_TxHeaderTypeDef TxHeader2;
+float PEDAL_ANG;
+float STR_ANG;
+float BRK_Pressure_T;
+float BRK_Pressure_F;
+float SUSP_TD;
+float SUSP_FE;
+float SUSP_FD;
+float SUSP_TE;
+float STR_ANG;
+CAN_TxHeaderTypeDef TxHeader;
 CAN_RxHeaderTypeDef RxHeader;
 uint32_t TxMailbox;
 uint8_t TxData[8];
@@ -81,8 +80,6 @@ static void MX_TIM4_Init(void);
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc);
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan);
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef * htim);
-int16_t Float_to_int(float float_value);
-void Send_CAN_Data(void );
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -125,7 +122,7 @@ int main(void)
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim4);
-  HAL_ADC_Start_DMA(&hadc1, (uint32_t *) ADC_VAL, READSIZE);
+   HAL_ADC_Start_DMA(&hadc1, (uint32_t *) ADC_VAL, READSIZE);
   if (HAL_CAN_Start(&hcan) != HAL_OK)
   {
       Error_Handler();
@@ -145,24 +142,42 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  while(state_machine == READY_TO_DRIVE){
 		  if(sendData == 1){
 		  if(IsADCFinished == 1){
-			  ADC_Voltage[0] = ReadVoltage(ADC_VAL[0]);
-			  STR_angle = ReadAngleSTR(ADC_Voltage[0]);
+			  for(int i = 0; i < READSIZE; i++){
 
-			  for(int i = 1; i < READSIZE; i++){
-				  ADC_Voltage[i] = ReadVoltage(ADC_VAL[i]); // Recebe as tensões convertidas
-				  ADC_Position[i] = ReadPosition(ADC_Voltage[i]); // Recebe a Tensão e converte em Posição do potenciometro linear
-			  }
+			        switch (i) {
+			            case 0:
+			                BRK_Pressure_T = ReadPressure(ADC_VAL[i]);
+			                break;
+			            case 1:
+			                BRK_Pressure_F = ReadPressure(ADC_VAL[i]);
+			                break;
+			            case 2:
+			            	SUSP_TD = ReadPosition(ReadVoltage(ADC_VAL[i]));
+			                break;
+			            case 3:
+			            	SUSP_FE = ReadPosition(ReadVoltage(ADC_VAL[i]));
+			                break;
+			            case 4:
+			            	SUSP_FD = ReadPosition(ReadVoltage(ADC_VAL[i]));
+			            	break;
+			            case 5:
+			            	SUSP_TE = ReadPosition(ReadVoltage(ADC_VAL[i]));
+			            	break;
+			            case 6:
+			            	STR_ANG = ReadAngleSTR(ReadVoltage(ADC_VAL[i]));
+			            	break;
+			        }
+			    }
+			  PEDAL_ANG = ReadAngle(Pedal_position);
 			  IsADCFinished = 0;
 		  }
-		  PEDAL_angle = ReadAngle(Pedal_position);
-		  Send_CAN_Data();
+		  sendData = 0;
 	  }
   }
   /* USER CODE END 3 */
-}}
+}
 
 /**
   * @brief System Clock Configuration
@@ -232,11 +247,11 @@ static void MX_ADC1_Init(void)
   */
   hadc1.Instance = ADC1;
   hadc1.Init.ScanConvMode = ADC_SCAN_ENABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.ContinuousConvMode = ENABLE;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 4;
+  hadc1.Init.NbrOfConversion = 7;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
     Error_Handler();
@@ -244,7 +259,7 @@ static void MX_ADC1_Init(void)
 
   /** Configure Regular Channel
   */
-  sConfig.Channel = ADC_CHANNEL_3;
+  sConfig.Channel = ADC_CHANNEL_1;
   sConfig.Rank = ADC_REGULAR_RANK_1;
   sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
@@ -254,7 +269,7 @@ static void MX_ADC1_Init(void)
 
   /** Configure Regular Channel
   */
-  sConfig.Channel = ADC_CHANNEL_5;
+  sConfig.Channel = ADC_CHANNEL_2;
   sConfig.Rank = ADC_REGULAR_RANK_2;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
@@ -263,7 +278,7 @@ static void MX_ADC1_Init(void)
 
   /** Configure Regular Channel
   */
-  sConfig.Channel = ADC_CHANNEL_6;
+  sConfig.Channel = ADC_CHANNEL_4;
   sConfig.Rank = ADC_REGULAR_RANK_3;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
@@ -272,8 +287,35 @@ static void MX_ADC1_Init(void)
 
   /** Configure Regular Channel
   */
-  sConfig.Channel = ADC_CHANNEL_7;
+  sConfig.Channel = ADC_CHANNEL_5;
   sConfig.Rank = ADC_REGULAR_RANK_4;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_6;
+  sConfig.Rank = ADC_REGULAR_RANK_5;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_7;
+  sConfig.Rank = ADC_REGULAR_RANK_6;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_8;
+  sConfig.Rank = ADC_REGULAR_RANK_7;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -316,17 +358,6 @@ static void MX_CAN_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN CAN_Init 2 */
-  TxHeader1.StdId = 0x10;
-  TxHeader1.ExtId = 0;
-  TxHeader1.IDE = CAN_ID_STD;
-  TxHeader1.RTR = CAN_RTR_DATA;
-  TxHeader1.DLC = 8;
-
-  TxHeader2.StdId = 0x11;
-  TxHeader2.ExtId = 0;
-  TxHeader2.IDE = CAN_ID_STD;
-  TxHeader2.RTR = CAN_RTR_DATA;
-  TxHeader2.DLC = 4;
 
   CAN_FilterTypeDef canfilterconfig;
 
@@ -422,6 +453,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
@@ -441,55 +473,71 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan){
 	            case 0x1: // 0 a 100 do pedal
 	                	Pedal_position = RxData[0];
 	                break;
-
-	            case 0x2:  // Estado do carro
-	                state_machine = RxData[1];
-	                break;
 }}}
-int16_t Float_to_int(float float_value){
-	int16_t converted = (int16_t)(float_value *100);
-	return converted;
-}
-void Send_CAN_Data(void) {
-    int16_t posConverted[4];
+void send_susp(void){
 
-    for (int i = 0; i < 4; i++) {
-        posConverted[i] = Float_to_int(ADC_Position[i]);
-    }
+	  TxHeader.StdId = 0x450;
+	  TxHeader.ExtId = 0;
+	  TxHeader.IDE = CAN_ID_STD;
+	  TxHeader.RTR = CAN_RTR_DATA;
+	  TxHeader.DLC = 8;
+
+	  int16_t pos_converted[4];
+
+		 pos_converted[0] = (int16_t)(SUSP_TD*100);
+		 pos_converted[1] = (int16_t)(SUSP_FE*100);
+		 pos_converted[2] = (int16_t)(SUSP_FD*100);
+		 pos_converted[3] = (int16_t)(SUSP_TE*100);
 
     // Sensores da Suspencao - 4 valores (8 bytes)
 
-    TxData[0] = (uint8_t)(posConverted[0]);
-    TxData[1] = (uint8_t)(posConverted[0] >> 8);
+    TxData[0] = (uint16_t)(pos_converted[0]);
+    TxData[1] = (uint16_t)((pos_converted[0]) >> 8);
+    TxData[2] = (uint16_t)(pos_converted[1]);
+    TxData[3] = (uint16_t)((pos_converted[1]) >> 8);
+    TxData[4] = (uint16_t)(pos_converted[2]);
+    TxData[5] =	(uint16_t)((pos_converted[2]) >> 8);
+    TxData[6] = (uint16_t)(pos_converted[3]);
+	TxData[7] = (uint16_t)((pos_converted[3]) >> 8);
 
-    TxData[2] = (uint8_t)(posConverted[1]);
-    TxData[3] = (uint8_t)(posConverted[1] >> 8);
-
-    TxData[4] = (uint8_t)(posConverted[2]);
-    TxData[5] = (uint8_t)(posConverted[2] >> 8);
-
-    TxData[6] = (uint8_t)(posConverted[3]);
-    TxData[7] = (uint8_t)(posConverted[3] >> 8);
-
-    if (HAL_CAN_AddTxMessage(&hcan, &TxHeader1, TxData, &TxMailbox) != HAL_OK){
+    if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK){
         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);  // Apaga o LED se o CAN falhar
         Error_Handler();
     }
-    int16_t str = Float_to_int(STR_angle);
-    int16_t pedal = Float_to_int(PEDAL_angle);
+}
+void send_angles(void ){
 
-    // StrAngle e PedalAngle - 2 valores (4 bytes)
+	  TxHeader.StdId = 0x451;
+	  TxHeader.ExtId = 0;
+	  TxHeader.IDE = CAN_ID_STD;
+	  TxHeader.RTR = CAN_RTR_DATA;
+	  TxHeader.DLC = 5;
 
-    TxData[0] = (uint8_t)(str);
-    TxData[1] = (uint8_t)(str >> 8);
+	  memcpy(TxData, &STR_ANG, sizeof(float));
+	  TxData[4] = (uint8_t) PEDAL_ANG;
 
-    TxData[2] = (uint8_t)(pedal);
-    TxData[3] = (uint8_t)(pedal >> 8);
+	    if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK){
+	        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);  // Apaga o LED se o CAN falhar
+	        Error_Handler();
+	    }
+}
+void send_pressure(void ){
 
-    if (HAL_CAN_AddTxMessage(&hcan, &TxHeader2, TxData, &TxMailbox) != HAL_OK) {
-        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);  // Apaga o LED se o CAN falhar
-        Error_Handler();
-    }}
+	  TxHeader.StdId = 0x452;
+	  TxHeader.ExtId = 0;
+	  TxHeader.IDE = CAN_ID_STD;
+	  TxHeader.RTR = CAN_RTR_DATA;
+	  TxHeader.DLC = 8;
+
+	    memcpy(&TxData[0], &BRK_Pressure_F, sizeof(float));
+
+	    memcpy(&TxData[4], &BRK_Pressure_T, sizeof(float));
+
+	    if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK){
+	        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);  // Apaga o LED se o CAN falhar
+	        Error_Handler();
+	    }
+}
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef * htim)
 {
 	sendData = 1;

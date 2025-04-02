@@ -57,6 +57,26 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define EXTRA_2_Pin GPIO_PIN_0
+#define EXTRA_2_GPIO_Port GPIOA
+#define BRK_PRESSURE_F_Pin GPIO_PIN_1
+#define BRK_PRESSURE_F_GPIO_Port GPIOA
+#define BRK_PRESSURE_T_Pin GPIO_PIN_2
+#define BRK_PRESSURE_T_GPIO_Port GPIOA
+#define EXTRA_3_Pin GPIO_PIN_3
+#define EXTRA_3_GPIO_Port GPIOA
+#define SUSP_TD_Pin GPIO_PIN_4
+#define SUSP_TD_GPIO_Port GPIOA
+#define SUSP_FE_Pin GPIO_PIN_5
+#define SUSP_FE_GPIO_Port GPIOA
+#define SUSP_FD_Pin GPIO_PIN_6
+#define SUSP_FD_GPIO_Port GPIOA
+#define SUSP_TE_Pin GPIO_PIN_7
+#define SUSP_TE_GPIO_Port GPIOA
+#define STR_ANG_Pin GPIO_PIN_0
+#define STR_ANG_GPIO_Port GPIOB
+#define EXTRA_1_Pin GPIO_PIN_1
+#define EXTRA_1_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
