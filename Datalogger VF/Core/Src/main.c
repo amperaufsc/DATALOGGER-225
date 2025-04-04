@@ -66,7 +66,7 @@ CAN_TxHeaderTypeDef TxHeader;
 CAN_RxHeaderTypeDef RxHeader;
 uint32_t TxMailbox;
 uint8_t TxData[8];
-uint8_t RxData[2];
+uint8_t RxData[1];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
