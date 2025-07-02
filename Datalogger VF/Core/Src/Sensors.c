@@ -35,7 +35,6 @@ float ReadAngleSTR(float voltage) {
     float str_angle = ((voltage - V_CENTER) / (V_MAX / 2)) * VOL_ANGLE_MAX;
     return str_angle;
 }
-float ReadPressure(uint16_t Analog_Val){
-    float voltage = ReadVoltage(Analog_Val);
+float ReadPressure(float voltage){
     return ((voltage / 3.3f) * 102.0f) * 14.5038f;
 }

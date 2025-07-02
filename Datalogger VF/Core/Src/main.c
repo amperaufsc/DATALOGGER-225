@@ -62,11 +62,13 @@ float SUSP_FE;
 float SUSP_FD;
 float SUSP_TE;
 float STR_ANG;
+int Teste = 150;
+int Teste_res = 0;
 CAN_TxHeaderTypeDef TxHeader;
 CAN_RxHeaderTypeDef RxHeader;
 uint32_t TxMailbox;
 uint8_t TxData[8];
-uint8_t RxData[1];
+uint8_t RxData[8];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -80,6 +82,7 @@ static void MX_TIM4_Init(void);
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc);
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan);
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef * htim);
+void send_angles(void );
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -122,16 +125,17 @@ int main(void)
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim4);
-   HAL_ADC_Start_DMA(&hadc1, (uint32_t *) ADC_VAL, READSIZE);
-  if (HAL_CAN_Start(&hcan) != HAL_OK)
-  {
-      Error_Handler();
-  }
-  else
-  {
-      // CAN iniciado --> acende o led
-      HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
-  }
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t *) ADC_VAL, READSIZE);
+  HAL_CAN_Start(&hcan);
+//  if (HAL_CAN_Start(&hcan) != HAL_OK)
+//  {
+//      Error_Handler();
+//  }
+//  else
+//  {
+//      // CAN iniciado --> acende o led
+//      HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
+//  }
   HAL_CAN_ActivateNotification(&hcan, CAN_IT_RX_FIFO0_MSG_PENDING);
   /* USER CODE END 2 */
 
@@ -142,16 +146,17 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  	  send_angles();
 		  if(sendData == 1){
 		  if(IsADCFinished == 1){
 			  for(int i = 0; i < READSIZE; i++){
 
 			        switch (i) {
 			            case 0:
-			                BRK_Pressure_T = ReadPressure(ADC_VAL[i]);
+			                BRK_Pressure_T = ReadPressure(ReadVoltage(ADC_VAL[i]));
 			                break;
 			            case 1:
-			                BRK_Pressure_F = ReadPressure(ADC_VAL[i]);
+			                BRK_Pressure_F = ReadPressure(ReadVoltage(ADC_VAL[i]));
 			                break;
 			            case 2:
 			            	SUSP_TD = ReadPosition(ReadVoltage(ADC_VAL[i]));
@@ -193,7 +198,7 @@ void SystemClock_Config(void)
   * in the RCC_OscInitTypeDef structure.
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
@@ -343,7 +348,7 @@ static void MX_CAN_Init(void)
   /* USER CODE END CAN_Init 1 */
   hcan.Instance = CAN1;
   hcan.Init.Prescaler = 18;
-  hcan.Init.Mode = CAN_MODE_NORMAL;
+  hcan.Init.Mode = CAN_MODE_LOOPBACK;
   hcan.Init.SyncJumpWidth = CAN_SJW_1TQ;
   hcan.Init.TimeSeg1 = CAN_BS1_6TQ;
   hcan.Init.TimeSeg2 = CAN_BS2_1TQ;
@@ -445,6 +450,7 @@ static void MX_DMA_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
   /* USER CODE BEGIN MX_GPIO_Init_1 */
 
   /* USER CODE END MX_GPIO_Init_1 */
@@ -454,6 +460,26 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
+
+  /*Configure GPIO pin : PC13 */
+  GPIO_InitStruct.Pin = GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PB14 */
+  GPIO_InitStruct.Pin = GPIO_PIN_14;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
@@ -473,6 +499,9 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan){
 	            case 0x1: // 0 a 100 do pedal
 	                	Pedal_position = RxData[0];
 	                break;
+	            case 0x451:
+	            	Teste_res = RxData[5];
+	            	break;
 }}}
 void send_susp(void){
 
@@ -511,15 +540,16 @@ void send_angles(void ){
 	  TxHeader.ExtId = 0;
 	  TxHeader.IDE = CAN_ID_STD;
 	  TxHeader.RTR = CAN_RTR_DATA;
-	  TxHeader.DLC = 5;
+	  TxHeader.DLC = 6;
 
 	  memcpy(TxData, &STR_ANG, sizeof(float));
 	  TxData[4] = (uint8_t) PEDAL_ANG;
-
-	    if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK){
-	        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);  // Apaga o LED se o CAN falhar
-	        Error_Handler();
-	    }
+	  TxData[5] = Teste;
+	  HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox);
+//	    if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK){
+//	        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);  // Apaga o LED se o CAN falhar
+//	        Error_Handler();
+//	    }
 }
 void send_pressure(void ){
 

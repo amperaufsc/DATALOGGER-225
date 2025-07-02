@@ -3,4 +3,4 @@
 ../Core/Src/Sensors.c:23:7:ReadAngle	24	static
 ../Core/Src/Sensors.c:28:6:CleanADC_VAL	24	static
 ../Core/Src/Sensors.c:33:7:ReadAngleSTR	24	static
-../Core/Src/Sensors.c:38:7:ReadPressure	24	static
+../Core/Src/Sensors.c:38:7:ReadPressure	16	static
